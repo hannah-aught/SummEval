@@ -7,6 +7,7 @@ import gin
 import bz2
 from summ_eval.s3_utils import rouge_n_we, load_embeddings
 from summ_eval.metric import Metric
+from tqdm.auto import tqdm
 
 dirname = os.path.dirname(__file__)
 
@@ -23,7 +24,7 @@ if not os.path.exists(os.path.join(dirname, "embeddings/deps.words")):
 @gin.configurable
 class RougeWeMetric(Metric):
     def __init__(self, emb_path=os.path.join(dirname, './embeddings/deps.words'), n_gram=3, \
-                 n_workers=24, tokenize=True):
+                 n_workers=24, tokenize=True, verbose=False):
         """
         ROUGE-WE metric
         Taken from https://github.com/UKPLab/emnlp-ws-2017-s3/tree/b524407ada525c81ceacd2590076e20103213e3b
@@ -43,6 +44,7 @@ class RougeWeMetric(Metric):
         self.n_gram = n_gram
         self.n_workers = n_workers
         self.tokenize = tokenize
+        self.verbose = verbose
 
     def evaluate_example(self, summary, reference):
         if not isinstance(reference, list):
@@ -57,7 +59,7 @@ class RougeWeMetric(Metric):
 
     def evaluate_batch(self, summaries, references, aggregate=True):
         p = Pool(processes=self.n_workers)
-        results = p.starmap(self.evaluate_example, zip(summaries, references))
+        results = p.starmap(self.evaluate_example, tqdm(zip(summaries, references), disable=not self.verbose, total=len(summaries)))
         p.close()
         if aggregate:
             corpus_score_dict = Counter()

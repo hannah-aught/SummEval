@@ -7,6 +7,7 @@ import zipfile, io
 from stanza.server import CoreNLPClient
 from summ_eval.metric import Metric
 from summ_eval.syntactic_utils import get_stats
+from tqdm.auto import tqdm
 
 dirname = os.path.dirname(__file__)
 
@@ -19,7 +20,7 @@ if not os.path.exists(os.path.join(dirname, "stanford-corenlp-full-2018-10-05"))
 
 @gin.configurable
 class SyntacticMetric(Metric):
-    def __init__(self):
+    def __init__(self, endpoint='http://localhost:9000', verbose=False):
         """
         Syntactic metric
 
@@ -30,23 +31,24 @@ class SyntacticMetric(Metric):
                 arguments for consistency.
 
         """
-        pass
+        self.endpoint = endpoint
+        self.verbose = verbose
 
     def evaluate_example(self, summary, reference):
         with CoreNLPClient(annotators=['tokenize', 'ssplit', 'pos', 'lemma', 'parse'], \
-                           timeout=30000, memory='16G') as client:
+                           timeout=30000, memory='16G', endpoint=self.endpoint) as client:
             answer = get_stats(client, summary)
             return answer
 
     def evaluate_batch(self, summaries, references, aggregate=True):
         corpus_score_dict = Counter()
         with CoreNLPClient(annotators=['tokenize', 'ssplit', 'pos', 'lemma', 'parse'], \
-                           timeout=30000, memory='16G') as client:
+                           timeout=30000, memory='16G', endpoint=self.endpoint) as client:
             if aggregate:
                 corpus_score_dict = Counter()
             else:
                 corpus_score_dict = []
-            for count, summ in enumerate(summaries):
+            for count, summ in tqdm(enumerate(summaries), disable=not self.verbose):
                 print(count)
                 stats = get_stats(client, summ)
                 if aggregate:

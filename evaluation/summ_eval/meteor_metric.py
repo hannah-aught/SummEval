@@ -14,6 +14,7 @@ import threading
 import psutil
 import requests
 from summ_eval.metric import Metric
+from tqdm.auto import tqdm
 
 dirname = os.path.dirname(__file__)
 
@@ -31,7 +32,7 @@ def dec(s):
     return s.decode('utf-8')
 
 class MeteorMetric(Metric):
-    def __init__(self, METEOR_JAR=os.path.join(dirname, 'meteor-1.5.jar')):
+    def __init__(self, METEOR_JAR=os.path.join(dirname, 'meteor-1.5.jar'), verbose=False):
         """
         METEOR metric
             Taken from nlg-eval:
@@ -64,7 +65,7 @@ class MeteorMetric(Metric):
                                          stdin=subprocess.PIPE,
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE)
-
+        self.verbose = verbose
         atexit.register(self.close)
 
     def close(self):
@@ -121,7 +122,7 @@ class MeteorMetric(Metric):
                 eval_line += ' ||| {}'.format(stat)
             self.meteor_p.stdin.write(enc('{}\n'.format(eval_line)))
             self.meteor_p.stdin.flush()
-            for _ in range(len(summaries)):
+            for _ in tqdm(range(len(summaries)), disable=not self.verbose, total=len(summaries)):
                 v = self.meteor_p.stdout.readline()
                 try:
                     scores.append(float(dec(v.strip())))

@@ -8,7 +8,7 @@ def get_stats(client, summary):
         w += len(sent.token)
     for pattern in patternlist:
         count = 0
-        matches = client.tregrex(summary, pattern.replace("'", ""))
+        matches = client.tregex(summary, pattern.replace("'", ""))
         for sent in matches['sentences']:
             count += len(sent.keys())
         patterncount.append(int(count))

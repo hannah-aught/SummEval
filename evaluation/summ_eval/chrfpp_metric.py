@@ -4,10 +4,11 @@ from multiprocessing import Pool
 import gin
 import sacrebleu
 from summ_eval.metric import Metric
+from tqdm.auto import tqdm
 
 @gin.configurable
 class ChrfppMetric(Metric):
-    def __init__(self, ncorder=6, beta=2, n_workers=24, remove_whitespace=True):
+    def __init__(self, ncorder=6, beta=2, n_workers=24, remove_whitespace=True, verbose=False):
         """
         Chrf++ metric
         Wrapper around sacrebleu: https://github.com/mjpost/sacrebleu
@@ -22,6 +23,7 @@ class ChrfppMetric(Metric):
         self.beta = beta
         self.n_workers = n_workers
         self.remove_whitespace = remove_whitespace
+        self.verbose=verbose
 
     def evaluate_example(self, summary, reference):
         if not isinstance(reference, list):
@@ -39,7 +41,7 @@ class ChrfppMetric(Metric):
             return score_dict
         else:
             p = Pool(processes=self.n_workers)
-            results = p.starmap(self.evaluate_example, zip(summaries, references))
+            results = p.starmap(self.evaluate_example, tqdm(zip(summaries, references), disable=not self.verbose, total=len(summaries)))
             p.close()
             return results
 

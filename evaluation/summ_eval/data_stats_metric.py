@@ -5,6 +5,7 @@ import gin
 import spacy
 from summ_eval.data_stats_utils import Fragments
 from summ_eval.metric import Metric
+from tqdm.auto import tqdm
 
 try:
     _en = spacy.load('en_core_web_sm')
@@ -21,7 +22,7 @@ def find_ngrams(input_list, n):
 
 @gin.configurable
 class DataStatsMetric(Metric):
-    def __init__(self, n_gram=3, n_workers=24, case=False, tokenize=True):
+    def __init__(self, n_gram=3, n_workers=24, case=False, tokenize=True, verbose=False):
         """
         Data Statistics metric
         Makes use of Newsroom code: \
@@ -45,6 +46,7 @@ class DataStatsMetric(Metric):
         self.n_workers = n_workers
         self.case = case
         self.tokenize = tokenize
+        self.verbose = verbose
 
     def evaluate_example(self, summary, input_text):
         if self.tokenize:
@@ -80,7 +82,7 @@ class DataStatsMetric(Metric):
     def evaluate_batch(self, summaries, input_texts, aggregate=True):
         corpus_score_dict = Counter()
         p = Pool(processes=self.n_workers)
-        results = p.starmap(self.evaluate_example, zip(summaries, input_texts))
+        results = p.starmap(self.evaluate_example, tqdm(zip(summaries, input_texts), disable=not self.verbose, total=len(summaries)))
         p.close()
         if aggregate:
             [corpus_score_dict.update(x) for x in results]

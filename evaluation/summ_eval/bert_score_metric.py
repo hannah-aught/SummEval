@@ -52,7 +52,7 @@ class BertScoreMetric(Metric):
         return score
 
     def evaluate_batch(self, summaries, references, aggregate=True):
-        all_preds, hash_code = bert_score.score(summaries, references, model_type=self.model_type, \
+        all_preds, hash_code = bert_score.score(references, summaries, model_type=self.model_type, \
                                                 num_layers=self.num_layers,
                                                 verbose=self.verbose, idf=self.idf, batch_size=self.batch_size,
                                                 nthreads=self.nthreads, lang=self.lang, return_hash=True,

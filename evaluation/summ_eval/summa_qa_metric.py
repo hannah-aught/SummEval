@@ -16,7 +16,7 @@ except OSError:
 
 @gin.configurable
 class SummaQAMetric(Metric):
-    def __init__(self, batch_size=8, max_seq_len=384, use_gpu=True, tokenize=True):
+    def __init__(self, batch_size=8, max_seq_len=384, use_gpu=True, tokenize=True, verbose=False):
         """
         SummaQA metric
         Makes use of code here:
@@ -47,6 +47,7 @@ class SummaQAMetric(Metric):
         self.max_seq_len = max_seq_len
         self.use_gpu = use_gpu
         self.tokenize = tokenize
+        self.verbose = verbose
 
     def evaluate_example(self, summary, input_text):
         if self.tokenize:
@@ -59,7 +60,7 @@ class SummaQAMetric(Metric):
         if self.tokenize:
             input_texts = [nlp(text, disable=["tagger", "textcat"]) for text in input_texts]
         scores = evaluate_corpus(input_texts, summaries, batch_size=self.batch_size, \
-                  max_seq_len=self.max_seq_len, aggregate=aggregate)
+                  max_seq_len=self.max_seq_len, aggregate=aggregate, verbose=self.verbose)
         return scores
 
     @property

@@ -4,6 +4,7 @@ import re
 import string
 import torch
 from transformers import BertTokenizer, BertForQuestionAnswering
+from tqdm.auto import tqdm
 
  # code from huggingface see https://huggingface.co/transformers/model_doc/bert.html#bertforquestionanswering
 
@@ -169,7 +170,7 @@ class QA_Metric:
         return {"summaqa_avg_prob": score_prob/len(questions), "summaqa_avg_fscore": score_f/len(questions)}
 
 
-def evaluate_corpus(srcs, gens, model=None, questionss=None, aswss=None, batch_size=8, max_seq_len=384, aggregate=True):
+def evaluate_corpus(srcs, gens, model=None, questionss=None, aswss=None, batch_size=8, max_seq_len=384, aggregate=True, verbose=False):
     """
     Calculate the QA scores for an entire corpus.
     Args:
@@ -195,7 +196,7 @@ def evaluate_corpus(srcs, gens, model=None, questionss=None, aswss=None, batch_s
     else:
         global_score = []
 
-    for i, (src, gen) in enumerate(zip(srcs, gens)):
+    for i, (src, gen) in tqdm(enumerate(zip(srcs, gens)), disable=not verbose, total=len(srcs)):
         # if questionss is None, generate the questions and answers else get the corrisponding ones.
         if not questionss:
             masked_questions, masked_question_asws = question_generator.get_questions(src)

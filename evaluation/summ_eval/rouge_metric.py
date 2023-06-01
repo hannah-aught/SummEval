@@ -7,6 +7,7 @@ import gin
 from summ_eval.metric import Metric
 from summ_eval.test_util import rouge_empty
 import subprocess
+from  tqdm.auto import tqdm
 
 try:
     ROUGE_HOME = os.environ['ROUGE_HOME']
@@ -45,6 +46,7 @@ class RougeMetric(Metric):
             print(f'Please run this command: \n pip install -U  git+https://github.com/bheinzerling/pyrouge.git')
             exit()
         self.rouge_args = rouge_args
+        self.verbose = verbose
 
     def evaluate_example(self, summary, reference):
         if not isinstance(reference, list):
@@ -71,7 +73,7 @@ class RougeMetric(Metric):
 
     def evaluate_batch(self, summaries, references, aggregate=True):
         if not aggregate:
-            results = [self.evaluate_example(summ, ref) for ref, summ in zip(references, summaries)]
+            results = [self.evaluate_example(summ, ref) for ref, summ in tqdm(zip(references, summaries), disable=not self.verbose, total=len(summaries))]
             return results
         self.r.system_dir = tempfile.mkdtemp()
         self.r.model_dir = tempfile.mkdtemp()
