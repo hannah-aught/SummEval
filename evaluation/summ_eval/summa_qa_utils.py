@@ -13,6 +13,7 @@ class QA_Bert():
 
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.model = BertForQuestionAnswering.from_pretrained('bert-large-uncased-whole-word-masking-finetuned-squad')
+        # self.model = BertForQuestionAnswering.from_pretrained('deepset/bert-base-uncased-squad2')
         self.SEP_id = self.tokenizer.encode('[SEP]')[0]
 
     def predict(self, input_ids, token_type_ids, attention_mask):
